@@ -1,0 +1,138 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="../lib/theme/default/style.css" type="text/css">
+    <link rel="stylesheet" href="../style.css" type="text/css">
+<title>OpenLayers + Sparklines test</title>
+  </head>
+  <body onload="init()">
+<script type="text/javascript" src="../lib/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" src="../lib/jquery.sparkline.min.js"></script>
+<script type="text/javascript" src="../lib/OpenLayers.js"></script>
+<script type="text/javascript" src="../Sparkline.js"></script>
+<script type="text/javascript" src="../Sparklines.js"></script>
+<script type="text/javascript" src="Konkurser2009-2012data.js"></script>
+<script type="text/javascript" src="Valresultat2012data.js"></script>
+<script type="text/javascript">
+	var map, osm, boxes;
+		function init(){
+			var box_width = 0.1;
+			var box_height = 0.1;
+			var WGS84 = new OpenLayers.Projection("EPSG:4326");
+
+			map = new OpenLayers.Map( 'map');
+			osm = new OpenLayers.Layer.OSM( "Simple OSM Map",
+								["http://a.tile.openstreetmap.org/${z}/${x}/${y}.png",
+								"http://b.tile.openstreetmap.org/${z}/${x}/${y}.png",
+								"http://c.tile.openstreetmap.org/${z}/${x}/${y}.png"], 
+								{displayProjection: WGS84}
+			);
+		 map.addLayers([osm]);
+		
+		var sparklines_valresultat = new OpenLayers.Layer.Sparklines( "Valresultat 2010", {
+				projection: WGS84,
+				chartOptions: {type:'pie'}
+		});
+		
+		var options = {sliceColors:['#00f','#22f','#44f','#66f','#ff0','#f88','#f00','#fff']}
+		
+		for (var i = 0; i < valresultat.length; i++) {
+			// Using bounds scales graphs with map
+			// You could also use Openlayers.Lonlat to ge fixed size graphs
+			var bounds = new OpenLayers.Bounds();
+			bounds.extend(new OpenLayers.LonLat(parseFloat(valresultat[i][2])-0.05, parseFloat(valresultat[i][3])-0.05));
+			bounds.extend(new OpenLayers.LonLat(parseFloat(valresultat[i][2])+0.05, parseFloat(valresultat[i][3])+0.05));
+			bounds.transform(WGS84, map.getProjectionObject());
+			var resultat = valresultat[i][4];
+			sparklines_valresultat.addChart(new OpenLayers.Marker.Sparkline(bounds,resultat.slice(0,7),options));
+		}
+		sparklines_valresultat.setOpacity(0.7); // make charts transaprent
+
+		var sparklines_konkurser = new OpenLayers.Layer.Sparklines( "Konkurser 2009-2012", {
+			projection: WGS84,
+			chartOptions: {type:'line'}
+		});
+		
+		map.addLayers([sparklines_konkurser, sparklines_valresultat]);
+		
+		for (var i = 0; i < konkurser.length; i++) {
+			var bounds = new OpenLayers.Bounds();
+			bounds.extend(new OpenLayers.LonLat(parseFloat(konkurser[i][2])-0.05, parseFloat(konkurser[i][3])+0.05));
+			bounds.extend(new OpenLayers.LonLat(parseFloat(konkurser[i][2])+0.05, parseFloat(konkurser[i][3])+0.15));
+			bounds.transform(WGS84, map.getProjectionObject());
+			var maxValue = parseFloat(konkurser[i][4])/100;
+			sparklines_konkurser.addChart(new OpenLayers.Marker.Sparkline(bounds,konkurser[i][5],{chartRangeMax:maxValue}));
+		}
+
+		map.addControl(new OpenLayers.Control.LayerSwitcher());
+
+		map.setCenter(
+			new OpenLayers.LonLat(15, 57).transform(
+							WGS84,
+							map.getProjectionObject()
+			), 8
+		);
+	}
+</script>
+<h1 id="title">OpenLayers + Sparklines Example</h1>
+
+<div id="tags">
+    openstreetmap basic light
+</div>
+
+<div id="shortdesc">Show a Simple OSM Map with overlayed graphs</div>
+
+<div id="map"  class="smallmap"></div>
+<div id="description">
+  <h3>Pie chart</h3>
+  <ul>
+    <li id="alians">Borgliga partier (M, Fp, C, Kd)</li>
+		<li id="oposition">Rödgröna (S, V, Mp)</li>
+    <li id="sd">Sverigedemokraterna</li>
+  </ul>
+  <h3>Line chart</h3>
+  <p>Bancruptcy, number of employes.</p>
+</div>
+<div id="docs">
+    <p>This example shows a very simple OSM layout of Sweden with minimal controls. The overlayed pie charts display local statistics from the goverment election 2010 (valresultat). The line graphs display monthly bankruptcy (konkurser) between 2009 and 20012, scaled to number of lost jobs and local population.</p>
+    <p>Data was retrieved from <a href="http://www.scb.se">SCB</a>. </p>
+    <p>The Map is supplied buy <a href="http://www.openstreetmaps.org" target="_blank">OpenStreetMap</a></p>
+    <p>To learn more about the graph library <a href="http://omnipotent.net/jquery.sparkline/#s-about" target="_blank">Sparklines and how to format graphs visit http://omnipotent.net/jquery.sparkline/#s-about</a>.</p>
+    <p>To learn more about the <a href="http://www.openlayers.org">map library OpenLayers visit www.openlayers.org</a></p>
+    <p>The OpenLayers + Sparklines layer was developed by Ulrik Södergren at <a href="http://www.digitalfotografen.se">DigitalFotografen AB</a></p>
+</div>
+
+<style type="text/css">
+#description {
+	width: 250px;
+	height: auto;
+	border: 1px solid #ccc;
+	position: absolute;
+	left: 40px;
+	top: 380px;
+	display: block;
+	padding: 4px;
+	float: left;
+	z-index: 2000;
+	background-color: rgba(128,128,128,0.5);
+	vertical-align: bottom;
+}
+#oposition {
+	color: #F00;
+	list-style-type: square;
+}
+#alians {
+	color: #00F;
+	list-style-type: square;
+}
+#sd {
+	color: #FF0;
+	list-style-type: square;
+}
+
+</style>
+</body>
+</html>

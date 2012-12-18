@@ -62,7 +62,9 @@ OpenLayers.Layer.Sparklines = OpenLayers.Class(OpenLayers.Layer, {
      */
     initialize: function(name, options) {
         OpenLayers.Layer.prototype.initialize.apply(this, arguments);
-				var defaultChartOptions = {width:'5em', height:'5em'};//chartOptions
+				var defaultOptions = {maxWidth: 100, maxHeight: 100, minWidth: 10, minHeight: 10}
+				OpenLayers.Util.applyDefaults(this.options, defaultOptions);
+				var defaultChartOptions = {};//chartOptions
 				OpenLayers.Util.applyDefaults(this.options.chartOptions, defaultChartOptions);
         this.charts = [];
     },
@@ -166,25 +168,45 @@ OpenLayers.Layer.Sparklines = OpenLayers.Class(OpenLayers.Layer, {
      * marker - {<OpenLayers.Marker.Sparkline>} 
      */
     drawChart: function(chart) {
-        var px = this.map.getLayerPxFromLonLat(chart.lonlat);
-        if (px == null) {
-            chart.display(false);
-        } else {
-					var sparkDiv = chart.draw(px);
-					this.div.appendChild(sparkDiv);
-					chart.render();
-					// uggly workaround since we use jquery
-					//$('#'+sparkDiv.id).append(marker.getChart());
-					$.sparkline_display_visible();
-					/*
-            if (!marker.isDrawn()) {
-                var markerImg = marker.draw(px);
-                this.div.appendChild(markerImg);
-            } else if(marker.icon) {
-                marker.icon.moveTo(px);
-            }
-						*/
-        }
+				// if bounds are defined, scale chart to bounds
+				if (chart.bounds != null){
+					var topleft = this.map.getLayerPxFromLonLat({
+							lon: chart.bounds.left,
+							lat: chart.bounds.top
+					});
+					var botright = this.map.getLayerPxFromLonLat({
+							lon: chart.bounds.right,
+							lat: chart.bounds.bottom
+					});
+					if (botright == null || topleft == null) {
+							chart.display(false);
+					} else {
+							var width = Math.min( Math.max(this.options.minWidth, botright.x - topleft.x), this.options.maxWidth);
+							var height = Math.min( Math.max(this.options.minHeight, botright.y - topleft.y), this.options.maxHeight);
+							var sparkDiv = chart.draw(topleft, {
+									w: width,
+									h: height
+							});
+							this.div.appendChild(sparkDiv);
+							chart.render();
+							$.sparkline_display_visible();
+					}
+				} else {
+					// use center coordinate and fixed size
+					var px = this.map.getLayerPxFromLonLat(chart.lonlat);
+					px.x = px.x - chart.options.width/2;
+					px.y= px.y - chart.options.height/2;
+					var sz = new OpenLayers.Size(chart.options.width,chart.options.height);
+					if (px == null) {
+							chart.display(false);
+					} else {
+						var sparkDiv = chart.draw(px, sz);
+						this.div.appendChild(sparkDiv);
+						chart.render();
+						$.sparkline_display_visible();
+					}
+			}
+			
     },
     
     /** 

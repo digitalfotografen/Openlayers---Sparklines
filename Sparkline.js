@@ -41,6 +41,12 @@ OpenLayers.Marker.Sparkline = OpenLayers.Class(OpenLayers.Marker, {
     lonlat: null,
     
     /** 
+     * Property: lonlat 
+     * {<OpenLayers.LonLat>} location of object
+     */
+    bounds: null,
+    
+    /** 
      * Property: div 
      * {DOMElement} 
      */
@@ -58,24 +64,37 @@ OpenLayers.Marker.Sparkline = OpenLayers.Class(OpenLayers.Marker, {
     map: null,
     
     /** 
-     * Constructor: OpenLayers.Marker
+     * Constructor: OpenLayers.Sparkline
      *
      * Parameters:
      * lonlat - {<OpenLayers.LonLat>} the position of this marker
      * icon - {<OpenLayers.Icon>}  the icon for this marker
      */
-    initialize: function(lonlat, values, options) {
+    initialize: function(pos, values, options) {
         var defaultOptions = {
-								offsetX: -10,
-								offsetY: -10
+								height: 100,
+								width: 100
 				};
-				
-				this.lonlat = lonlat;
+				this.options = OpenLayers.Util.applyDefaults(options, defaultOptions);
+
+				switch(pos.CLASS_NAME) {
+						case "OpenLayers.LonLat":    
+								this.lonlat = pos;
+								break;
+								
+						case "OpenLayers.Geometry.Point":
+								this.lonlat = pos;
+								break;
+								
+						case "OpenLayers.Bounds":    
+								this.bounds = pos;
+								break;
+				}
         
         this.div    = OpenLayers.Util.createDiv();
+				this.div.appendChild(document.createTextNode(' '));
         //this.div.style.overflow = 'hidden';
-				this.values = values; // dummy values
-				this.options = OpenLayers.Util.applyDefaults(options, defaultOptions);
+				this.values = values;
         this.events = new OpenLayers.Events(this, this.div);
     },
     
@@ -106,11 +125,12 @@ OpenLayers.Marker.Sparkline = OpenLayers.Class(OpenLayers.Marker, {
     * Returns:
     * {DOMElement} A new DOM div element at the location passed-in
     */
-    draw: function(px) {
-        var sz = new OpenLayers.Size(this.options.width,this.options.height);
+    draw: function(px, sz) {
+        //var sz = new OpenLayers.Size(this.options.width,this.options.height);
 				//px = px.offset({x:this.options.offsetX, y:this.options.offsetY});
 				OpenLayers.Util.modifyDOMElement(this.div, null, px, sz);
-				this.div.appendChild(document.createTextNode(' '));
+				this.options.width = sz.w;
+				this.options.height = sz.h;
 				return this.div;
     }, 
 
