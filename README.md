@@ -1,7 +1,7 @@
 Openlayers---Sparklines
 =======================
 
-Graphinglayer with pie, line and bar charts 
+Graphing layer for interactive maps. Can display small pie, line and bar charts.
 
 This is an integration of OpenLayers and Sparklines to generate interactive maps with overlayed graphs.
 
